@@ -63,18 +63,18 @@ public class OctreeGenerator : MonoBehaviour
     private void DebugNode(OctNode node)
     {
         //Leaf
-        if (node.Children == null)
+        if (node._children == null)
         {
-            if (!node.State) return;
+            if (!node._state) return;
             GameObject debug = Instantiate(_voxelRepresentation, 
-                node.Pos * _voxelSize.x - (Vector3.one * (_bounds.extents.x / 2f)), 
+                node._pos * _voxelSize.x - (Vector3.one * (_bounds.extents.x / 2f)), 
                 Quaternion.identity, transform);
-            debug.transform.localScale = _voxelSize * node.Span * 2;
+            debug.transform.localScale = _voxelSize * node._span * 2;
         }
         //Node
         else
         {
-            foreach (OctNode child in node.Children)
+            foreach (OctNode child in node._children)
             {
                 DebugNode(child);
             }

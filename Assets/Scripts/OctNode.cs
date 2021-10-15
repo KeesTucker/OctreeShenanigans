@@ -1,16 +1,18 @@
+using System;
 using System.Linq;
 using UnityEngine;
 
+[Serializable]
 public class OctNode
 {
     private OctNode _parent;
-    public OctNode[] Children;
+    public OctNode[] _children;
 
-    public bool State;
+    public bool _state;
 
-    public int Span;
+    public int _span;
 
-    public Vector3 Pos;
+    public Vector3 _pos;
 
     public static OctNode GenerateFullTree(int resolution)
     {
@@ -21,11 +23,11 @@ public class OctNode
 
     private void AddChildren(int span, Vector3 pos, OctNode parent)
     {
-        Span = span;
-        Pos = pos;
+        _span = span;
+        _pos = pos;
         _parent = parent;
         if (span <= 1) return;
-        Children = new OctNode[8];
+        _children = new OctNode[8];
 
         for (int z = 0, i = 0; z < 2; z++)
         {
@@ -34,7 +36,7 @@ public class OctNode
                 for (int x = 0; x < 2; x++, i++)
                 {
                     var child = new OctNode();
-                    Children[i] = child;
+                    _children[i] = child;
                     child.AddChildren(span / 2, pos + new Vector3(
                         (x - 0.5f) * 2f * span / 2f,
                         (y - 0.5f) * 2f * span / 2f, 
@@ -55,59 +57,57 @@ public class OctNode
 
     private void CleanLevel()
     {
-        if (Children == null)
+        if (_children == null && _parent._children?[0] == this)
         {
             _parent.CleanNode();
         }
         else
         {
-            foreach (OctNode child in Children)
-            {
-                child.CleanLevel();
-            }
+            if (_children == null) return;
+            foreach (OctNode child in _children) child.CleanLevel();
         }
     }
 
     private void CleanNode()
     {
-        if (Children == null) return;
-        
-        bool mergeable = Children.All(child => child.State == Children[0].State);
+        if (_children == null) return;
+        if (_children.Any(child => child._children != null)) return;
 
-        //Should remove the !Children[0].State but it breaks :(.
-        if (!mergeable || !Children[0].State) return;
+        bool mergeable = _children.All(child => child._state == _children[0]._state);
         
-        State = Children[0].State;
-        Children = null;
+        if (!mergeable) return;
+        
+        _state = _children[0]._state;
+        _children = null;
     }
     
     public void SetNodeStateAtPosition(bool state, Vector3 pos)
     {
         //Leaf
-        if (Children == null)
+        if (_children == null)
         {
-            State = state;
+            _state = state;
         }
         //Node
         else
         {
             int target = 0;
-            if (pos.z > Pos.z)
+            if (pos.z > _pos.z)
             {
                 target += 4;
             }
 
-            if (pos.y > Pos.y)
+            if (pos.y > _pos.y)
             {
                 target += 2;
             }
             
-            if (pos.x > Pos.x)
+            if (pos.x > _pos.x)
             {
                 target += 1;
             }
             
-            Children[target].SetNodeStateAtPosition(state, pos);
+            _children[target].SetNodeStateAtPosition(state, pos);
         }
     }
 }
